@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/DarioAcevedo/go-testing/mvc/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,10 +26,24 @@ var uCTests = []struct {
 
 func TestUserController (t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
 	for _, tc := range uCTests {
-		CallGetUserTest(tc.n, w)
-		assert.Equal(t, tc.exp, w.Body.String())
+
+		name := fmt.Sprintf("Test with user: %v", tc.exp)
+
+		t.Run(name, func(t *testing.T) {
+			
+			t.Parallel()
+
+			w := httptest.NewRecorder()
+			CallGetUserTest(tc.n, w)
+			var usr domain.User 
+			err := json.Unmarshal(w.Body.Bytes(), &usr)
+			if err != nil {
+				t.Errorf("Got an error unmarshalling: %v", err)
+			}
+			assert.Equal(t, tc.exp, usr.FirstName)
+		})
+
 	}
 }
 
